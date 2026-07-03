@@ -1,10 +1,3 @@
-// 親機Arduino（テンポ生成・全体のクロックマスター）
-// ・可変抵抗器の値からBPM(20〜80)を算出する
-// ・算出したBPMに従って一定間隔でSerial1（ハードUART）へ拍イベントを送信する
-//   停止時: 0 を1回だけ送信
-//   演奏中: 拍が来るたびに現在のBPM値をそのまま送信（受信側は「0か非0か」だけを見て拍の合図として扱う）
-// ・子機Arduino（snow_density.ino）へは直結のSerial1で送る想定。PCへは直接送らない。
-
 const int POT_PIN   = A0;   // 可変抵抗器を接続するアナログ入力ピン
 const int BPM_MIN   = 20;   // BPM下限（ゼロ除算回避のため0にしない）
 const int BPM_MAX   = 80;   // BPM上限
@@ -30,12 +23,10 @@ void loop() {
       Serial1.println(0);   // 停止を表す0を1回だけ送信する
       playing = false;
     }
-    return;                 // 停止中はbeatを送らない（つまみを上げるまで何も送らない）
+    return;                 // 停止中はbeatを送らない
   }
 
   // 停止から復帰した直後はタイミングを今に合わせる（連続送信の防止）
-  // これをしないと、停止していた間の経過時間ぶん beatInterval を超えてしまい、
-  // 復帰直後に拍が連続で送信されてしまう。
   if (!playing) {
     lastBeatTime = now;
     playing = true;
@@ -50,10 +41,7 @@ void loop() {
 
   // 目標時刻に到達したらBPMの数値だけを送信する
   if (now - lastBeatTime >= beatInterval) {
-    // 次の目標時刻は「今の時刻」ではなく「前回の目標時刻 + 周期」で決める。
-    // = now にしてしまうと loop() の実行遅延が毎回積み重なり、拍の間隔が徐々に遅れていく（クロックドリフト）。
-    // += beatInterval にすることで、ズレを蓄積させずに一定間隔を保つ。
-    lastBeatTime += beatInterval;
-    Serial1.println(bpm);          // 現在のBPM値（数値のみ）を送信する。値そのものより「送信された」ことが拍の合図として使われる
+    lastBeatTime += beatInterval;  // 次の目標時刻を周期分だけ加算する
+    Serial1.println(bpm);          // 現在のBPM値（数値のみ）を送信する
   }
 }
