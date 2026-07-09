@@ -1,0 +1,14 @@
+# macOSが自動生成するファイル
+.DS_Store
+
+# GitHubに載せないローカル作業用フォルダ・ファイル
+_backup/
+700/
+doukitest_pde/
+sync_logger/
+test1/
+報告書作業リスト.md
+
+# 計測データ・ログ（ローカルのみ）
+*.csv
+*.log
